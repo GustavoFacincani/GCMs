@@ -1,0 +1,64 @@
+---
+title: "Download_NetCDF_Data"
+author: "Gustavo Facincani Dourado"
+date: "8/9/2020"
+output: html_document
+---
+
+
+This command donwloads NetCDF downscaled (LOCA) data from here: http://albers.cnr.berkeley.edu/data/scripps/loca_vic-output/
+
+The 10 GCMs that are relevant to California's situation to be used for 4th California Climate Assessment
+
+The data of each model is saved in a folder with its name in the directory, with subfolders for each the RCP scenarios (4.5 and 8.5 in this case), containing the variables of interest
+
+```{r}
+library(dplyr)
+library(RCurl) 
+library(utils)
+
+#set your output folder
+setwd("C:/Users/gusta/Desktop/PhD/CERCWET/GCMs")
+
+GCMs_loca <- "http://albers.cnr.berkeley.edu/data/scripps/loca_vic-output/"
+
+rcps <- c("rcp45", "rcp85")
+variables <- c("ET", "Tair", "baseflow", "precip", "rainfall", "SWE", "runoff", "snow_melt", "snowfall", "tot_runoff")
+GCMs <- c("CanESM2", "CNRM-CM5", "HadGEM2-ES","MIROC5",  #these we already have
+              "ACCESS1‐0","CCSM4", "CESM1-BGC","CMCC-CMS","GFDL-CM3","HadGEM2-CC")#all 10 GCMs
+
+#loop through 2006-2099
+
+for (GCM in GCMs){
+  for(rcp in rcps) {
+    for(variable in variables) {
+      for ( year in 2006:2099){
+      GCM_dir <- paste(GCMs_loca,GCM,"/",rcp,"/", sep = "") #setting the path to find the data online
+
+doc <- read_html(GCM_dir)
+filenames <- html_attr(html_nodes(doc, "a"), "href") #using the website's structure to select the data we want in the available links
+filenames2 <- filenames[ grepl("ET.2" , filenames) | grepl("Tair" , filenames)| grepl("baseflow" , filenames) | grepl("precip" , filenames) | grepl("rainfall" , filenames) | grepl("SWE" , filenames) | grepl("runoff" , filenames) | grepl("snow_melt" , filenames) | grepl("snowfall" , filenames) | grepl("tot_runoff" , filenames)] #selecting the names of each variable we want, so R downloads what we want
+
+#print(filenames) #here I was checking what I got
+#print(filenames2) #here I was checking what I got
+
+
+        
+	#loop through all of those files and save them to your working directory
+	for ( i in filenames2 ){ 
+	
+		#determine the GCM and RCP directory
+		pth <- paste( "C:/Users/gusta/Desktop/PhD/CERCWET/GCMs/", GCM,"/", rcp,"/" , sep="" )
+		#if the directory doesn't exist, make it!
+		if (!dir.exists(pth)){
+			dir.create(file.path(pth), recursive = TRUE)
+		}
+
+		download.file( paste( GCM_dir , i , sep="" ) , paste("C:/Users/gusta/Desktop/PhD/CERCWET/GCMs/", GCM,"/", rcp,"/" , i, sep="" ) , mode="wb" )
+	}	
+
+    }}}}
+  
+  
+```
+```
