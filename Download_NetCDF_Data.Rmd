@@ -22,10 +22,10 @@ setwd("C:/Users/gusta/Desktop/PhD/CERCWET/GCMs")
 
 GCMs_loca <- "http://albers.cnr.berkeley.edu/data/scripps/loca_vic-output/"
 
-rcps <- c("rcp45", "rcp85")
-variables <- c("ET", "Tair", "baseflow", "precip", "rainfall", "SWE", "runoff", "snow_melt", "snowfall", "tot_runoff")
-GCMs <- c("CanESM2", "CNRM-CM5", "HadGEM2-ES","MIROC5",  #these we already have
-              "ACCESS1‐0","CCSM4", "CESM1-BGC","CMCC-CMS","GFDL-CM3","HadGEM2-CC")#all 10 GCMs
+rcps <- c("rcp45", "rcp85") #emission scenarios we are interested in
+variables <- c("ET", "Tair", "baseflow", "precip", "rainfall", "SWE", "runoff", "snow_melt", "snowfall", "tot_runoff") #variables we are interested in
+GCMs <- c("CanESM2", "CNRM-CM5", "HadGEM2-ES","MIROC5", #all 10 GCMs we are interested in #these we already have
+              "ACCESS1‐0","CCSM4", "CESM1-BGC","CMCC-CMS","GFDL-CM3","HadGEM2-CC") #these are the ones we need
 
 #loop through 2006-2099
 
