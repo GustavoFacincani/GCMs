@@ -1,0 +1,85 @@
+---
+title: "Extract_Data_NetCDFfiles"
+author: "Gustavo Facincani Dourado"
+date: "8/11/2020"
+output: html_document
+---
+
+```{r}
+#load packages that are going to/can be used
+library(dplyr)
+library(raster)
+library(ncdf4)
+library(maptools)
+library(foreign)
+library(RNetCDF)
+library(rgdal)
+library(lubridate)
+library(tidyverse)
+```
+
+
+```{r}
+#Trying it with one file - daily total runoff for the year 2007
+file<- brick("C:/Users/gusta/Desktop/PhD/CERCWET/GCMs/ACCESS1-0/rcp45/tot_runoff.2007.v0.CA_NV.nc")
+#extent(file)
+
+# number of layers
+names(file)
+nl <- nlayers(file)
+
+df = list() #make the dataframe we'll produce as a list
+```
+
+```{r}
+# begin of loop
+for (i in 1:nl){
+
+# Extract the raster file of layers
+r <- raster(file, layer = i)
+
+# Extract relevant information from shapefile
+#Using Merced as an example, this is a shapefile with multiple polygons
+#the basin is divided into 6 subwatersheds
+Mer_shp <- shapefile("C:/Users/gusta/Desktop/PhD/CERCWET/GCMs/Shapefiles/Mer.shp")
+Mer <-Mer_shp["SUBWAT"] #attribute to divide the subwatersheds
+
+# Ensure command extract is from raster package
+extract <- raster::extract
+# Extract the mean value of cells within AMC polygon
+# Alternative: look to "mask" function ?mask
+masked_file<-extract(r, 
+                    Mer, #shapefile
+                    fun = mean, #the mean observed values in the region
+                    #if I don't use the mean, I'll get the data from each point and respective weights of each point
+                    na.rm=TRUE, 
+                    df=T, #as a dataframe
+                    small=T, 
+                    sp=T,  
+                    weights=TRUE, 
+                    normalizedweights=TRUE)
+
+# Generate variable depicting the date
+# Extract the information about the time
+date <- r@z[[1]] #x and y are lat-long, z = time
+date
+date <- as.Date(date, origin = "1800-01-01") #dates in NetCDF files are numbers that represent daily count of days since 01-01-1800, so let's read it as date
+
+
+# Compile the codes for variable and time in one dataframe
+df <- data.frame(date, masked_file)
+
+colnames(df)[3] <- "total_runoff" #rename the column with the variable
+
+
+#set directory where it's going to be saved
+setwd("C:/Users/gusta/Desktop/PhD/CERCWET/GCMs/ACCESS1-0/rcp45/")
+
+# save data as .csv
+#If I use write.csv, I get one csv per day, so I used write.table with append = TRUE to save it all as one file
+#in this case, if we use the shape with multiple polygons, each subbasin will be repeated per row
+#if we use individual polygons, then we have individual csvs per subbasin
+write.table(df,file="df.csv", append=TRUE,sep=",",col.names=FALSE,row.names=FALSE) 
+}
+
+```
