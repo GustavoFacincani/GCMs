@@ -5,8 +5,13 @@ date: "8/12/2020"
 output: html_document
 ---
 
-He we are going to create function to extract all data of interest from a basin's shapefile.
+He we are going to create a function to extract all data of interest within a basin's area from NetCDF files.
 In this case, I'll use "Mer.shp", "Tuo.shp", "Stn.shp", "USJ.shp", which are files that contain multiple polygons (subbasins), for the watersheds: Merced, Tuolumne, Stanislaus and Upper San Joaquin. I used the file "allbasin_subwatersheds" we have on box (the 4 basins are together, but I split the shapefile into 4 using QGIS).
+To use this function, the projections of the NetCDF and shapefile need to be the same, in our case, they are. Projections can be checked with csr(). The function will return me .csv files containing daily data for each subbasin in separate files, in folders named after each basin, GCM and RCP. It takes a long time to read these files.
+Units of the NetCDF file can be checked by using nc_open():
+tot_runoff & runoff & rainfall & precip & baseflow & del_SWE & snowmelt &  snowfall & ET = mm/day; 
+SWE & soilMoist1, 2 & 3 = mm; 
+Tair = °C.
 
 ```{r}
 #If you want just one GCM, one RCP scenario or one variable, you can just "mute" (#) the undesired ones in the first lines of this function, before the loop for the years
