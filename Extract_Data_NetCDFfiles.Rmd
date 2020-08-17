@@ -5,6 +5,7 @@ date: "8/11/2020"
 output: html_document
 ---
 
+This extracts the data, but in the actual units they are in the NetCDF file. I'll fix it in another code.
 ```{r}
 #load packages that are going to/can be used
 library(dplyr)
