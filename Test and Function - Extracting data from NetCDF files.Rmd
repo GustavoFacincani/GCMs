@@ -218,9 +218,12 @@ colnames(df)[3] <- "flw" #same name as the one we have on Box
 
 for(j in unique(df$SUBWAT)) { #select the data for each subbasin separately
 
-subbasin <- subset(df, SUBWAT == j) #subsetting per subbasin
-subbasin <- subbasin[-2] #as we already used the column with the subbasin name, we can remove it
-subbasin[2] <- subbasin*1000*area(Shp_file["SUBWAT" == j])/1000000
+subbasin <- df %>% 
+  subset(., SUBWAT == j) %>% #subsetting per subbasin
+  #here I'm diving by 1,000 to make mm/day become m/day, then multiplying by the are of the subbasin (m2) and dividing again by 1,000,000 to get mcm/day
+  mutate(flw = (flw/1000*Shp_file$AREA[Shp_file$SUBWAT == j]/1000000),
+         SUBWAT = NULL) #as we already used the column with the subbasin name, we can remove it
+	 
 # save data as .csv
 write.table(subbasin, #vector we want to save
             file= paste0(finalpath, "tot_runoff_",j,"_mcm.csv"), #save csv files per basin
