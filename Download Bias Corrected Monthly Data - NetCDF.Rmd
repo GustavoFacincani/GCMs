@@ -64,7 +64,7 @@ filenames2 <- filenames[ grepl(paste(GCM,".",rcp,".",area, sep = ""), filenames)
 			dir.create(file.path(pth), recursive = TRUE)
 		}
 options('download.file.method'='curl')
-		download.file( paste( GCM_BCdir , i , sep="" ) , paste("C:/Users/gusta/Desktop/PhD/CERCWET/GCMs/",basin,"/BC_Data_Berkeley/", i, sep="" ) , mode="libcurl" )
+		download.file( paste( GCM_BCdir , i , sep="" ) , paste(pth,"/", i, sep="" ) , mode="libcurl" )
 	}	
 
     }}}
