@@ -1,0 +1,69 @@
+---
+title: "Bias Correction of VIC Total Runoff - GCMs"
+author: "Gustavo Facincani Dourado"
+date: "8/17/2020"
+output: html_document
+---
+
+```{r}
+#First, create a function to download the monthly data
+
+library(dplyr)
+library(RCurl) 
+library(utils)
+
+#set your output folder
+
+Download_BC <- function(basin, area) { #basin = name of the folder we're creating to save the data, and area = region from which we want the data
+  #basin -> Merced = MERR, Stanislaus = STNR, Tuolumne = TUOR, Upper San Joaquin = USJR
+  #area -> Merced = LK_MC, Stanislaus = N_MEL, Tuolumne = DPR_I, Upper San Joaquin = MILLER
+setwd("C:/Users/gusta/Desktop/PhD/CERCWET/GCMs")
+
+  #setting the path to find the data online
+GCM_BCdir <- "http://albers.cnr.berkeley.edu/data/scripps/streamflow/"
+
+rcps <- c("rcp45", "rcp85")
+
+GCMs <- c(#"CanESM2", "CNRM-CM5", "HadGEM2-ES","MIROC5",  #these we already have
+              "ACCESS1‐0","CCSM4", "CESM1-BGC","CMCC-CMS","GFDL-CM3","HadGEM2-CC")#all 10 GCMs
+
+#loop through 2006-2099
+
+for (GCM in GCMs){
+  for(rcp in rcps) {
+
+
+doc <- read_html(GCM_BCdir)
+filenames <- html_attr(html_nodes(doc, "a"), "href") #using the website's structure to select the data we want in the available links
+
+filenames2 <- filenames[ grepl(paste(GCM,".",rcp,".",area, sep = ""), filenames)] #selecting the GCMs and areas we want, so R downloads only what we'll use
+
+
+	#loop through all of those files and save them to your working directory
+	for ( i in filenames2 ){ 
+	
+		#determine the directory they're going to
+		pth <- paste( "C:/Users/gusta/Desktop/PhD/CERCWET/GCMs/",basin,"/BC_Data_Berkeley/", sep="" )
+		#if the directory doesn't exist, make it!
+		if (!dir.exists(pth)){
+			dir.create(file.path(pth), recursive = TRUE)
+		}
+options('download.file.method'='curl')
+		download.file( paste( GCM_BCdir , i , sep="" ) , paste("C:/Users/gusta/Desktop/PhD/CERCWET/GCMs/",basin,"/BC_Data_Berkeley/", i, sep="" ) , mode="libcurl" )
+	}	
+
+    }}}
+  
+  
+
+```
+
+
+```{r}
+Download_BC("MERR", "LK_MC")
+Download_BC("STNR", "N_MEL")
+Download_BC("TUOR", "DPR_I")
+Download_BC("USJR", "MILLER")
+```
+
+
