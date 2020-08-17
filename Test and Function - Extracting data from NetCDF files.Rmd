@@ -103,7 +103,7 @@ for(j in unique(df$SUBWAT)) { #select the data for each subbasin separately
 
 subbasin <- df %>% 
   subset(., SUBWAT == j) %>% #subsetting per subbasin
-  #here I'm diving by 1,000 to make mm/day become m/day, then multiplying by the are of the subbasin (m2) and dividing again by 1,000,000 to get mcm/day
+  #here I'm diving by 1,000 to make mm/day become m/day, then multiplying by the area of the subbasin (m2) and dividing again by 1,000,000 to get mcm/day
   mutate(flw = (flw/1000*Shp_file$AREA[Shp_file$SUBWAT == j]/1000000),
          SUBWAT = NULL) #as we already used the column with the subbasin name, we can remove it
 
@@ -220,7 +220,7 @@ for(j in unique(df$SUBWAT)) { #select the data for each subbasin separately
 
 subbasin <- df %>% 
   subset(., SUBWAT == j) %>% #subsetting per subbasin
-  #here I'm diving by 1,000 to make mm/day become m/day, then multiplying by the are of the subbasin (m2) and dividing again by 1,000,000 to get mcm/day
+  #here I'm diving by 1,000 to make mm/day become m/day, then multiplying by the area of the subbasin (m2) and dividing again by 1,000,000 to get mcm/day
   mutate(flw = (flw/1000*Shp_file$AREA[Shp_file$SUBWAT == j]/1000000),
          SUBWAT = NULL) #as we already used the column with the subbasin name, we can remove it
 	 
