@@ -4,6 +4,21 @@ author: "Gustavo Facincani Dourado"
 date: "8/17/2020"
 output: html_document
 ---
+The ones we need:
+UF 16, "Stanislaus R at N Melones Rsv" == VIC's "N_MEL"
+UF 18, "Tuolumne R at Don Pedro Rsv" == VIC's "DPR_I"
+UF 19, "Merced R at Exchequer Rsv" == VIC's "LK_MCC"
+UF 22, "San Joaquin R at Millerton Rsv" == VIC's "MILLER"
+
+Others:
+UF  6, "Sac R near Red Bluff" == VIC's "SAC_B"
+UF  8, "Feather R near Oroville" == VIC's "OROVI"
+UF  9, "Yuba R at Smartville" == VIC's "SMART"
+UF 10, "Bear R near Wheatland" == VIC's "BEARC"
+UF 11, "American R at Fair Oakes" == VIC's "FOL_I"
+UF 14, "Mokelumne R at Pardee Rsv" == VIC's "PRD-C"
+UF 15, "Calaveras at Jenny Lind" == VIC's "N_HOG"
+
 
 ```{r}
 #First, create a function to download the monthly data
