@@ -5,7 +5,9 @@ date: "8/16/2020"
 output: html_document
 ---
 
-In this script I'm trying to extract data from a NetCDF (raw data from http://albers.cnr.berkeley.edu/data/scripps/loca_vic-output/) using shapefiles of basins with multiple polygons (subbasins).
+In this script I'm trying to extract data from a NetCDF files (raw data from http://albers.cnr.berkeley.edu/data/scripps/loca_vic-output/) using shapefiles 
+of basins with multiple polygons (subbasins). First I tried doing it for one file, using one shapefile. Then, I create a function to do it automatically to 
+multiple files.
 
 ```{r}
 #load packages that are going to/can be used
