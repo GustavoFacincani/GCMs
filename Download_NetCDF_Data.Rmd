@@ -28,7 +28,7 @@ GCMs <- c(#"CanESM2", "CNRM-CM5", "HadGEM2-ES","MIROC5", #all 10 GCMs we are int
 for (GCM in GCMs){
   for(rcp in rcps) {
     for(variable in variables) {
-      for ( year in 2006:2010){
+      for ( year in 2006:2099){
         GCM_dir <- paste(GCMs_loca,GCM,"/",rcp,"/", sep = "") #setting the path to find the data online
         doc <- xml2::read_html(GCM_dir)
         filenames <- html_attr(html_nodes(doc, "a"), "href") #using the website's structure to select the data we want in the available links
