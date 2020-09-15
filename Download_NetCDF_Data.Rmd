@@ -11,54 +11,48 @@ This command donwloads NetCDF downscaled (LOCA) data from here: http://albers.cn
 The 10 GCMs that are relevant to California's situation to be used for 4th California Climate Assessment
 
 The data of each model is saved in a folder with its name in the directory, with subfolders for each the RCP scenarios (4.5 and 8.5 in this case), containing the variables of interest
-
 ```{r}
 library(dplyr)
 library(RCurl) 
+library(rvest)
 library(utils)
-
 #set your output folder
 setwd("C:/Users/gusta/Desktop/PhD/CERCWET/GCMs")
-
 GCMs_loca <- "http://albers.cnr.berkeley.edu/data/scripps/loca_vic-output/"
-
 rcps <- c("rcp45", "rcp85") #emission scenarios we are interested in
-variables <- c("ET", "Tair", "baseflow", "precip", "rainfall", "SWE", "runoff", "snow_melt", "snowfall", "tot_runoff") #variables we are interested in
-GCMs <- c("CanESM2", "CNRM-CM5", "HadGEM2-ES","MIROC5", #all 10 GCMs we are interested in #these we already have
-              "ACCESS1‐0","CCSM4", "CESM1-BGC","CMCC-CMS","GFDL-CM3","HadGEM2-CC") #these are the ones we need
-
+variables <- c(#"ET", "Tair", "baseflow", "precip", "rainfall", "SWE", "runoff", "snow_melt", "snowfall", 
+  "tot_runoff") #variables we are interested in
+GCMs <- c(#"CanESM2", "CNRM-CM5", "HadGEM2-ES","MIROC5", #all 10 GCMs we are interested in #these we already have
+  "ACCESS1‐0","CCSM4", "CESM1-BGC","CMCC-CMS","GFDL-CM3","HadGEM2-CC") #these are the ones we need
 #loop through 2006-2099
-
 for (GCM in GCMs){
   for(rcp in rcps) {
     for(variable in variables) {
-      for ( year in 2006:2099){
-      GCM_dir <- paste(GCMs_loca,GCM,"/",rcp,"/", sep = "") #setting the path to find the data online
-
-doc <- read_html(GCM_dir)
-filenames <- html_attr(html_nodes(doc, "a"), "href") #using the website's structure to select the data we want in the available links
-filenames2 <- filenames[ grepl("ET.2" , filenames) | grepl("Tair" , filenames)| grepl("baseflow" , filenames) | grepl("precip" , filenames) | grepl("rainfall" , filenames) | grepl("SWE" , filenames) | grepl("runoff" , filenames) | grepl("snow_melt" , filenames) | grepl("snowfall" , filenames) | grepl("tot_runoff" , filenames)] #selecting the names of each variable we want, so R downloads what we want
-
-#print(filenames) #here I was checking what I got
-#print(filenames2) #here I was checking what I got
-
-
+      for ( year in 2006:2010){
+        GCM_dir <- paste(GCMs_loca,GCM,"/",rcp,"/", sep = "") #setting the path to find the data online
+        doc <- xml2::read_html(GCM_dir)
+        filenames <- html_attr(html_nodes(doc, "a"), "href") #using the website's structure to select the data we want in the available links
+        filenames2 <- filenames[ #grepl(paste0("ET.2",year,sep=""), filenames) | grepl(paste0("Tair",year,sep=""), filenames)| grepl(paste0("baseflow" ,year,sep=""), filenames) | grepl(paste0("precip",year,sep="") , filenames) | grepl(paste0("rainfall" ,year,sep=""), filenames) | grepl(paste0("SWE",year,sep=""), filenames) | grepl(paste0("runoff",year,sep=""), filenames) | grepl(paste0("snow_melt",year,sep=""), filenames) | grepl(paste0("snowfall",year,sep=""), filenames) | 
+          grepl(paste0("tot_runoff.",year,sep=""), filenames)] #selecting the names of each variable we want, so R downloads what we want
+        #print(filenames) #here I was checking what I got
+        #print(filenames2) #here I was checking what I got
         
-	#loop through all of those files and save them to your working directory
-	for ( i in filenames2 ){ 
-	
-		#determine the GCM and RCP directory
-		pth <- paste( "C:/Users/gusta/Desktop/PhD/CERCWET/GCMs/", GCM,"/", rcp,"/" , sep="" )
-		#if the directory doesn't exist, make it!
-		if (!dir.exists(pth)){
-			dir.create(file.path(pth), recursive = TRUE)
-		}
+        #loop through all of those files and save them to your working directory
+        for ( i in filenames2 ){ 
+          
+          #determine the GCM and RCP directory
+          pth <- paste( "C:/Users/gusta/Desktop/PhD/CERCWET/GCMs/", GCM,"/", rcp,"/" , sep="" )
+          #if the directory doesn't exist, make it!
+          if (!dir.exists(pth)){
+            dir.create(file.path(pth), recursive = TRUE)
+          }
+          download.file( paste( GCM_dir , i , sep="" ) , paste("C:/Users/gusta/Desktop/PhD/CERCWET/GCMs/", GCM,"/", rcp,"/" , i, sep="" ) , mode="wb" )
+        }	
+      }
+    }
+  }
+}
 
-		download.file( paste( GCM_dir , i , sep="" ) , paste("C:/Users/gusta/Desktop/PhD/CERCWET/GCMs/", GCM,"/", rcp,"/" , i, sep="" ) , mode="wb" )
-	}	
 
-    }}}}
-  
-  
-```
+
 ```
