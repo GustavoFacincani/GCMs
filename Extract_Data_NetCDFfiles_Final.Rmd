@@ -35,11 +35,10 @@ NetCDF_Extract <- function(shapefile, basin) { #basin = name of folder in which 
   
   #Let's define what we want to read
   rcps <- c("rcp45", "rcp85") #both emission scenarios
-  variables <- c(#"ET", "Tair", "baseflow", "precip", "rainfall", "SWE", "runoff", "snow_melt", "snowfall", 
+  variables <- c(#"ET", "Tair", "baseflow", "precip", "rainfall", "SWE", "runoff", "snow_melt", "snowfall", #these we won't need right now
     "tot_runoff")
   GCMs <- c(#"CanESM2", "CNRM-CM5", "HadGEM2-ES","MIROC5",  #these we already have
-            #"ACCESS1‐0","CCSM4", "CESM1-BGC","CMCC-CMS","GFDL-CM3",
-    "HadGEM2-CC")#all 10 GCMs
+            "ACCESS1‐0","CCSM4", "CESM1-BGC","CMCC-CMS","GFDL-CM3", HadGEM2-CC")#all 10 GCMs
   
   
   #Let's loop through 2006-2099
