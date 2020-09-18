@@ -17,7 +17,10 @@ library(RCurl)
 library(rvest)
 library(utils)
 #set your output folder
-setwd("C:/Users/gusta/Desktop/PhD/CERCWET/GCMs")
+setwd("C:/Users/gusta/Box/VICE Lab/RESEARCH/PROJECTS/CERC-WET/Task7_San_Joaquin_Model/Pywr models/data/common/hydrology/NetCDF files/Total Runoff")
+
+savepath <- "C:/Users/gusta/Box/VICE Lab/RESEARCH/PROJECTS/CERC-WET/Task7_San_Joaquin_Model/Pywr models/data/common/hydrology/NetCDF files/Total Runoff"
+
 GCMs_loca <- "http://albers.cnr.berkeley.edu/data/scripps/loca_vic-output/"
 rcps <- c("rcp45", "rcp85") #emission scenarios we are interested in
 variables <- c(#"ET", "Tair", "baseflow", "precip", "rainfall", "SWE", "runoff", "snow_melt", "snowfall", 
@@ -41,18 +44,15 @@ for (GCM in GCMs){
         for ( i in filenames2 ){ 
           
           #determine the GCM and RCP directory
-          pth <- paste( "C:/Users/gusta/Desktop/PhD/CERCWET/GCMs/", GCM,"/", rcp,"/" , sep="" )
+          pth <- paste( savepath,"/", GCM,"/", rcp,"/" , sep="" )
           #if the directory doesn't exist, make it!
           if (!dir.exists(pth)){
             dir.create(file.path(pth), recursive = TRUE)
           }
-          download.file( paste( GCM_dir , i , sep="" ) , paste("C:/Users/gusta/Desktop/PhD/CERCWET/GCMs/", GCM,"/", rcp,"/" , i, sep="" ) , mode="wb" )
+          download.file( paste( GCM_dir , i , sep="" ) , paste(savepath,"/", GCM,"/", rcp,"/" , i, sep="" ) , mode="wb" )
         }	
       }
     }
   }
 }
-
-
-
 ```
