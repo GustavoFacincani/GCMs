@@ -13,63 +13,78 @@ tot_runoff & runoff & rainfall & precip & baseflow & del_SWE & snowmelt &  snowf
 SWE & soilMoist1, 2 & 3 = mm; 
 Tair = °C.
 
-```{r}
-#If you want just one GCM, one RCP scenario or one variable, you can just "mute" (#) the undesired ones by commenting them out in the first lines of this function, before the loop for the years
+Setting global variables
 
-NetCDF_Extract <- function(shapefile, basin) { #basin = name of folder in which you'll save the data, such as "Merced River" #shapefile = name of the shapefile you'll use, as mentioned in line 9
+```{r}
+
+rcps <- c("rcp45", "rcp85") # Emission scenarios we are interested in
+
+tot_variables <- c("ET", "Tair", "baseflow", "precip", "rainfall", "SWE", "runoff", "snow_melt", "snowfall", "tot_runoff")
+
+needed_variables <- c("tot_runoff")
+
+tot_GCMs <- c("CanESM2", "CNRM-CM5", "HadGEM2-ES","MIROC5", "ACCESS1‐0",
+              "CCSM4","CESM1-BGC","CMCC-CMS","GFDL-CM3","HadGEM2-CC")
+
+used_GCMs <- c("CanESM2", "CNRM-CM5", "HadGEM2-ES","MIROC5")
+
+needed_GCMs <- c( "ACCESS1‐0","CCSM4","CESM1-BGC","CMCC-CMS","GFDL-CM3",
+                  "HadGEM2-CC")
+
+# Path to shapefiles that are used
+shp_path <- "C:/Users/gusta/Desktop/PhD/CERCWET/GCMs/Shapefiles/"
+
+# Path to save the csv files
+
+csv_path <- paste0("C:/Users/gusta/Box/VICELab/RESEARCH/PROJECTS/
+  CERC-WET/Task7_San_Joaquin_Model/Pywrmodels/data/",basin,"/","hydrology/   gcms","/",GCM,"_",rcp,"/")
+
+#if the directory doesn't exist, make it!
+if (!dir.exists(csv_path)){
+  dir.create(file.path(csv_path), recursive = TRUE)
+}
+
+```
+
+
+```{r}
+
+NetCDF_Extract <- function(shapefile, basin) { 
   
-  #Set directory where files are going to be saved
-  wd <- setwd("C:/Users/gusta/Desktop/PhD/CERCWET/GCMs/")
+  # Basin = name of folder in which you'll save the data, such as "Merced River" #shapefile = name of the shapefile you'll use, as mentioned in line 9
   
-  #Path to shapefiles that are used
-  shp_path <- "C:/Users/gusta/Desktop/PhD/CERCWET/GCMs/Shapefiles/"
+  # Let's loop through 2006-2099
   
-  #Path to save the csv files
+  # If you want just one GCM, one RCP scenario or one variable, you can just "mute" (#) the undesired ones by commenting them out in the first lines of this function, before the loop for the years
   
-  finalpath <- paste("C:/Users/gusta/Box/VICE Lab/RESEARCH/PROJECTS/CERC-WET/Task7_San_Joaquin_Model/Pywr models/data/",basin,"/","hydrology/gcms","/",GCM,"_",rcp,"/",sep="")
-  #if the directory doesn't exist, make it!
-  if (!dir.exists(finalpath)){
-    dir.create(file.path(finalpath), recursive = TRUE)
-  }
-  
-  
-  #Let's define what we want to read
-  rcps <- c("rcp45", "rcp85") #both emission scenarios
-  variables <- c(#"ET", "Tair", "baseflow", "precip", "rainfall", "SWE", "runoff", "snow_melt", "snowfall", #these we won't need right now
-    "tot_runoff")
-  GCMs <- c(#"CanESM2", "CNRM-CM5", "HadGEM2-ES","MIROC5",  #these we already have
-            "ACCESS1‐0","CCSM4", "CESM1-BGC","CMCC-CMS","GFDL-CM3", HadGEM2-CC")#all 10 GCMs
-  
-  
-  #Let's loop through 2006-2099
-  
-  #set final path 
   for (GCM in GCMs){
     for(rcp in rcps) {
       for(variable in variables) {
         for(year in 2006:2099){
-          #read in the netCDF data 
+          # Read in the netCDF data 
           dpath <- paste0(wd,"/",GCM, "/",rcp,"/",variable,".",
-                          as.character(year),".v0.CA_NV.nc", sep="")
+                          as.character(year),".v0.CA_NV.nc")
           
           file <- brick(dpath)
-          nl<-nlayers(file) #give me the number of layers in netCDF data 
+          # Give me the number of layers in netCDF data
+          nl <- nlayers(file) 
           
-          df = list() #set the dataframe we want, to be a list, in order to store all results of the loops
-          subbasin = list() #set the dataframe we want, to be a list, in order to store all results of the loops
+          # Set the dataframe we want, to be a list, in order to store all results of the loops
+          df = list() 
           
-          # begin of loop
-          for (i in 1:nl){
+          #Set the subbasin we want, to be a list, in order to store all results of the loops
+          subbasin = list() 
+          
+          for (layers in 1:nl){
             
             # Extract the raster file of layers
-            r <- raster(file, layer = i)
-            
+            r <- raster(file, layer = layers)
             
             # Extract relevant information from shapefile
-            Shp_file <- shapefile(paste0(shp_path,shapefile, sep = ""))
-            Shp_file$SUBWAT <- gsub("^.{0,4}", "sb", Shp_file$SUBWAT) #switch names in the attribute table of the shp file
+            shp_file <- shapefile(paste0(shp_path,shapefile))
+            shp_file$SUBWAT <- gsub("^.{0,4}", "sb", shp_file$SUBWAT) #switch names in the attribute table of the shp file
             #these shapefiles have basin names as MER_01, MER_02, etc. So, here I'm selecting the first 4 digits, and switching them for "sb", so that I can use this attributes later to split the .csv file directly by subbasin, already with the same labels we currently have on Box
-            Shp <-Shp_file["SUBWAT"]
+            Shp <- shp_file["SUBWAT"]
             
             # Ensure command extract is from raster package
             extract <- raster::extract
@@ -105,10 +120,10 @@ NetCDF_Extract <- function(shapefile, basin) { #basin = name of folder in which 
               
               # save data as .csv
               write.table(subbasin, #vector we want to save
-                          file= paste0(finalpath, "tot_runoff_",j,"_mcm.csv"), #save csv files per basin
+                          file= paste0(csv_path, "tot_runoff_",j,"_mcm.csv"), #save csv files per basin
                           append=TRUE, #this gathers all the loop's results, if FALSE we'll have results being overwritten over and over again in the first line
                           sep=",",
-                          col.names=!file.exists(paste0(finalpath,"tot_runoff_",j,"_mcm.csv")), #if we set as TRUE, we'll have headings repeated per each row, in this way we just have one heading
+                          col.names=!file.exists(paste0(csv_path,"tot_runoff_",j,"_mcm.csv")), #if we set as TRUE, we'll have headings repeated per each row, in this way we just have one heading
                           row.names=FALSE, #no names for rows
                           quote = FALSE) #no column with quotes
               
@@ -117,11 +132,12 @@ NetCDF_Extract <- function(shapefile, basin) { #basin = name of folder in which 
         }
       }
     }
-    
   }
 }
 
 ```
+
+Running the extract function for all basins
 
 ```{r}
 NetCDF_Extract("Mer.shp", "Merced River")
