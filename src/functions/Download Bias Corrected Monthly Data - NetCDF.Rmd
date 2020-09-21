@@ -8,7 +8,7 @@ The ones we need:
 UF 16, "Stanislaus R at N Melones Rsv" == VIC's "N_MEL"
 UF 18, "Tuolumne R at Don Pedro Rsv" == VIC's "DPR_I"
 UF 19, "Merced R at Exchequer Rsv" == VIC's "LK_MCC"
-UF 22, "San Joaquin R at Millerton Rsv" == VIC's "MILLER"
+UF 22, "San Joaquin R at Millerton Rsv" == VIC's "MILLE"
 
 Others:
 UF  6, "Sac R near Red Bluff" == VIC's "SAC_B"
@@ -31,7 +31,7 @@ library(utils)
 
 Download_BC <- function(basin, area) { #basin = name of the folder we're creating to save the data, and area = region from which we want the data
   #basin -> Merced = MERR, Stanislaus = STNR, Tuolumne = TUOR, Upper San Joaquin = USJR
-  #area -> Merced = LK_MC, Stanislaus = N_MEL, Tuolumne = DPR_I, Upper San Joaquin = MILLER
+  #area -> Merced = LK_MC, Stanislaus = N_MEL, Tuolumne = DPR_I, Upper San Joaquin = MILLE
 setwd("C:/Users/gusta/Desktop/PhD/CERCWET/GCMs")
 
   #setting the path to find the data online
