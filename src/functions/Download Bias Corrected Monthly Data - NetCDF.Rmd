@@ -78,7 +78,7 @@ options('download.file.method'='curl')
 Download_BC("MERR", "LK_MC")
 Download_BC("STNR", "N_MEL")
 Download_BC("TUOR", "DPR_I")
-Download_BC("USJR", "MILLER")
+Download_BC("USJR", "MILLE")
 ```
 
 
