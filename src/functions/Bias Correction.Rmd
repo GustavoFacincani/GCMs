@@ -1,0 +1,186 @@
+---
+title: "Untitled"
+author: "Gustavo Facincani Dourado"
+date: "8/17/2020"
+output: html_document
+---
+
+```{r}
+library(ncdf4)
+library(lubridate)
+library(reshape2)
+library(dplyr)
+library(hyfo)
+library(ggplot2)
+```
+
+```{r}
+#start with empty workspace
+#rm(list=ls(all=TRUE))
+
+#Set working directory
+setwd("C:/Users/gusta/Desktop/PhD/CERCWET/GCMs/")
+wd <- setwd("C:/Users/gusta/Desktop/PhD/CERCWET/GCMs/")
+#Read NC file with monthly bias-corrected flows
+ncfname <- paste(wd, "/", "MERR/BC_Data_Berkeley/CanESM2.rcp45.LK_MC.1950-2100.monthly.BC.nc", sep = "")
+mdlname <- "CanESM2_rcp45"
+ncin <- nc_open(ncfname)
+ncin
+```
+
+```{r}
+t <- ncvar_get(ncin, "time")
+flw.array <- ncvar_get(ncin,'flow')
+t <- as.Date.numeric(t,origin = "1900-01-01")
+BCFlow_Berk <- data.frame(t,flw.array/35.314666)#converting cfs to cms #*86400/1000000) #or using this forZ mcm^3/day
+colnames(BCFlow_Berk) <- c('Date','Flw')
+BCFlow_Berk$Date <- as.Date(ymd(BCFlow_Berk$Date))
+BCFlow_Berk <- extractPeriod(BCFlow_Berk,startDate = '2006-01-15', endDate = '2100-12-15')
+BCFlow_Berk
+```
+
+```{r}
+#Get daily VIC flows at the Reservoir
+data <- list()
+for (f in (1:6)){
+  d <- read.csv(paste(wd,"/Merced/CanESM2/rcp45/","tot_runoff_sb0",f,"_mcm.csv", sep=""))
+  data[[f]] <- d
+}
+
+df <- Reduce(function(x,y) full_join(x,y, by=c('Date')), data)
+
+colnames(df) <-  c('Date',1:6)
+#df$Date <- as.Date(df$Date, format = "%d/%m/%Y")
+df$TotFlw <- df$'1'+df$'2'+df$'3'+df$'4'+df$'5'+df$'6'
+daily_flw_vic <- data.frame(df$Date,df$TotFlw)
+colnames(daily_flw_vic) <- c('Date','Flw')
+daily_flw_vic$Date <- as.Date(ymd(daily_flw_vic$Date))
+daily_flw_vic$Flw <- daily_flw_vic$Flw/86400*1000000 #I'm using mcm/day, so turn it back into m^3/s
+print(head(daily_flw_vic))
+```
+
+```{r}
+#Aggregate to monthly value
+monthly_flw_vic <- aggregate(daily_flw_vic[,2],by=list(year(daily_flw_vic$Date),month(daily_flw_vic$Date)),FUN=mean,na.rm=TRUE)
+colnames(monthly_flw_vic) <- c('Year','Month','Flw')
+monthly_flw_vic <- monthly_flw_vic[with(monthly_flw_vic,order(monthly_flw_vic$'Year')),]
+monthly_flw_vic$Date <- paste(monthly_flw_vic$Year,'-', monthly_flw_vic$Month,'-15', sep="")
+monthly_flw_vic <- monthly_flw_vic[,c(4,3)]
+monthly_flw_vic$Date <- as.Date(ymd(monthly_flw_vic$Date))
+monthly_flw_vic_orig <- monthly_flw_vic
+monthly_flw_vic_orig$Type <- 'Original'
+
+print(monthly_flw_vic_orig)
+print(BCFlow_Berk)
+```
+
+```{r}
+#Bias Correction
+new_df <- list()
+bc_df <- list()
+fin_df <- list()
+
+for (i in (1:12)){
+  print(i)
+  obs <- filter(BCFlow_Berk,month(BCFlow_Berk$Date)== i)
+  hind <- filter(monthly_flw_vic,month(monthly_flw_vic$Date)== i)
+
+  bF <- getBiasFactor(hind,obs,method = "scaling", scaleType = "multi",preci = FALSE, prThreshold = 0, extrapolate = "no")
+  for (f in (1:6)){
+    new_df[[f]] <- filter(data[[f]],month(as.Date(data[[f]]$Date, format = "%Y-%m-%d")) ==i)
+    bc_df[[f]] <- applyBiasFactor(new_df[[f]],bF)
+    if (i==1){
+      fin_df[[f]] <- bc_df[[f]]
+    }
+    else {
+      fin_df[[f]] <- bind_rows(fin_df[[f]],bc_df[[f]])
+     
+    }
+  }
+}
+
+```
+
+```{r}
+#Sort and write
+for(i in (1:6)){
+  fin_df[[i]] <- arrange(fin_df[[i]], Date)
+  write.csv(fin_df[[i]],file=paste(wd, "/", "MERR/Catchment_RO","/","tot_runoff_sb0",i,".csv", sep=""),row.names=F)
+}
+
+df_new <- Reduce(function(x,y) full_join(x,y, by=c('Date')), fin_df)
+colnames(df_new) <-  c('Date',1:6)
+
+
+```
+
+```{r}
+df_new$TotFlw <- df_new$'1'+df_new$'2'+df_new$'3'+df_new$'4'+df_new$'5'+df_new$'6'
+daily_flw_vic <- data.frame(df_new$Date,df_new$TotFlw)
+colnames(daily_flw_vic) <- c('Date','Flw')
+daily_flw_vic$Date <- as.Date(ymd(daily_flw_vic$Date))
+daily_flw_vic$Flw <- daily_flw_vic$Flw/86400*1000000
+
+#Aggregate to monthly value
+monthly_flw_vic <- aggregate(daily_flw_vic[,2],by=list(year(daily_flw_vic$Date),month(daily_flw_vic$Date)),FUN=mean,na.rm=TRUE)
+colnames(monthly_flw_vic) <- c('Year','Month','Flw')
+monthly_flw_vic <- monthly_flw_vic[with(monthly_flw_vic,order(monthly_flw_vic$'Year')),]
+monthly_flw_vic$Date <- paste(monthly_flw_vic$Year,'-', monthly_flw_vic$Month,'-15', sep="")
+monthly_flw_vic_mod <- monthly_flw_vic[,c(4,3)]
+monthly_flw_vic_mod$Date <- as.Date(ymd(monthly_flw_vic_mod$Date))
+monthly_flw_vic_mod$Type <- 'Bias Corrected'
+
+#Plot
+BCFlow_Berk$Type <- 'Cal-Adapt'
+monthly_flw_vic_orig <- extractPeriod(monthly_flw_vic_orig,startDate = '2006-01-15', endDate = '2100-12-15')
+monthly_flw_vic_mod <- extractPeriod(monthly_flw_vic_mod,startDate = '2006-01-15', endDate = '2100-12-15')
+BCFlow_Berk <- extractPeriod(BCFlow_Berk,startDate = '2006-01-15', endDate = '2100-12-15')
+data_to_plot <- bind_rows(monthly_flw_vic_orig,monthly_flw_vic_mod,BCFlow_Berk)
+data_to_plot <- melt(data_to_plot,id.vars=c('Date','Type'))
+data_to_plot <- data_to_plot[,c(1,2,4)]
+colnames(data_to_plot) <- c('Date','Data','Flow')
+data_to_plot$Data <- as.factor(data_to_plot$Data)
+print(head(data_to_plot))
+```
+
+```{r}
+##Line Curve
+line <- ggplot(data_to_plot,aes(x=Date, y=Flow, color=Data))+ geom_line()+  scale_x_date(limits = as.Date(c('2006-01-01','2050-12-31')))
+line + png(filename=paste("C:/Users/gusta/Desktop/PhD/CERCWET/GCMs/MERR/Catchment_RO/",mdlname,"_line.png",sep=""), units="in",width=6.5,height=3,res=360)
+```
+
+```{r}
+##CFD Curve
+data.nm <- unique(data_to_plot$Data)
+data_to_plot$FDC <- NA
+for (i in (1:length(data.nm))){
+  vls <- data_to_plot$Flow[data_to_plot$Data==data.nm[i]]
+  Fn <- ecdf(vls)
+  data_to_plot$FDC[data_to_plot$Data==data.nm[i]] <- 1-Fn(vls) # exceedance probabilities
+}
+
+ggplot(data_to_plot, aes(x=FDC, y=Flow, color=Data)) + geom_line() + geom_point(shape=21, size=0.05, alpha=0.25) + #[rvic.hist.all.m$Model=="ACCESS1-0_rcp45",]
+        scale_y_log10(limits=c(3e-1,3e3)) +
+#        facet_wrap(~Data, ncol=2) +
+        ylab(expression("Q ("*m^3/s*")")) + xlab("Exceedance probability") +
+  png(filename=paste("C:/Users/gusta/Desktop/PhD/CERCWET/GCMs/MERR/Catchment_RO/",mdlname,"_fdc.png",sep=""), type="cairo", units="in",width=6.5,height=3.5,res=360)
+```
+
+```{r}
+## Box&whisker
+ggplot(data_to_plot, aes(x=Data, y=Flow)) + geom_boxplot() +
+ #       scale_y_log10(limits=c(3e-1,3e3)) +
+        ylab(expression("Q ("*m^3/s*")")) + xlab("Data") +
+  png(filename=paste("C:/Users/gusta/Desktop/PhD/CERCWET/GCMs/MERR/Catchment_RO/",mdlname,"_box.png",sep=""), type="cairo", units="in",width=6.5,height=4,res=360)
+
+
+```
+
+```{r}
+## Q-Q plot
+ggplot(data_to_plot, aes(sample=Flow, color=Data)) + stat_qq(shape=21, size=0.75) +
+#        + facet_wrap(~Data, ncol=2)
+png(filename=paste("C:/Users/gusta/Desktop/PhD/CERCWET/GCMs/MERR/Catchment_RO/",mdlname,"_qq.png",sep=""), type="cairo", units="in",width=6.5,height=3,res=360)
+
+```
+
